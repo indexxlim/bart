@@ -1,0 +1,277 @@
+PreTrainedTokenizer(name_or_path='HanBert-54kN-torch', vocab_size=54000, model_max_len=1000000000000000019884624838656, is_fast=False, padding_side='right', special_tokens={'bos_token': '[CLS]', 'eos_token': '[SEP]', 'unk_token': '[UNK]', 'sep_token': '[SEP]', 'pad_token': '[PAD]', 'cls_token': '[CLS]', 'mask_token': '[MASK]'})
+
+PreTrainedTokenizer(name_or_path='facebook/bart-base', vocab_size=50265, model_max_len=1024, is_fast=False, padding_side='right', special_tokens={'bos_token': AddedToken("<s>", rstrip=False, lstrip=False, single_word=False, normalized=True), 'eos_token': AddedToken("</s>", rstrip=False, lstrip=False, single_word=False, normalized=True), 'unk_token': AddedToken("<unk>", rstrip=False, lstrip=False, single_word=False, normalized=True), 'sep_token': AddedToken("</s>", rstrip=False, lstrip=False, single_word=False, normalized=True), 'pad_token': AddedToken("<pad>", rstrip=False, lstrip=False, single_word=False, normalized=True), 'cls_token': AddedToken("<s>", rstrip=False, lstrip=False, single_word=False, normalized=True), 'mask_token': AddedToken("<mask>", rstrip=False, lstrip=True, single_word=False, normalized=True)})
+
+PreTrainedTokenizer(name_or_path='facebook/bart-large', vocab_size=50265, model_max_len=1024, is_fast=False, padding_side='right', special_tokens={'bos_token': AddedToken("<s>", rstrip=False, lstrip=False, single_word=False, normalized=True), 'eos_token': AddedToken("</s>", rstrip=False, lstrip=False, single_word=False, normalized=True), 'unk_token': AddedToken("<unk>", rstrip=False, lstrip=False, single_word=False, normalized=True), 'sep_token': AddedToken("</s>", rstrip=False, lstrip=False, single_word=False, normalized=True), 'pad_token': AddedToken("<pad>", rstrip=False, lstrip=False, single_word=False, normalized=True), 'cls_token': AddedToken("<s>", rstrip=False, lstrip=False, single_word=False, normalized=True), 'mask_token': AddedToken("<mask>", rstrip=False, lstrip=True, single_word=False, normalized=True)})
+
+PreTrainedTokenizerFast(name_or_path='kobart', vocab_size=30000, model_max_len=1000000000000000019884624838656, is_fast=True, padding_side='right', special_tokens={'bos_token': '<s>', 'eos_token': '</s>', 'unk_token': '<unk>', 'pad_token': '<pad>', 'mask_token': '<mask>'})
+
+#data ## 2019
+['dart-10.12.out.txt', 'cafe-out.txt', 'news-2019-out.txt', 'life-out.txt', 'blog1-out.txt', 'news-1997-out.txt', '100dic_doosan.step2.txt', 'law-out.txt', 'namu-2019-out.txt', 'campus-out.txt', 'novel-adult-out.txt', 'kowiki-2019-out.txt', 'news-2004-out.txt', 'novel-out.txt',  'books-out.txt', 'clinic-out.txt',  'blog2-out.txt', '100dic_pascal.step2.txt']
+['news-2010-2019-out.txt', 'ip-1.selected.txt', 'ip-2.selected.txt']
+## 2020
+['NIKL_NEWSPAPER.txt',  'NIKL_WRITTEN.txt']
+
+find . -name '*.txt' | xargs wc -l
+
+
+#환경
+
+ ssh -i "tbai_2021.pem" ubuntu@ec2-13-125-250-191.ap-northeast-2.compute.amazonaws.com
+ scp -i "tbai_2021.pem" /8T/bart_corpus/bart_clinic-out.txt ssh -i "tbai_2021.pem" ubuntu@ec2-13-125-250-191.ap-northeast-2.compute.amazonaws.com:/home/ubuntu/bart/data
+
+
+https://github.com/huggingface/transformers/issues/5212
+
+
+nohup python -u main.py &>test.out < /dev/null &
+
+misc/kowiki_20200720_100d.pkl
+
+
+#tpu bart
+ssh-keygen -t rsa -f ~/.ssh/tpu_bart2 -C jisu
+
+tfrecords.. (데이터 용량 문제)
+하지만 electra에서는 tfrecords파일을 만들긴 하지만, masking 하는 부분을 dataloader에 따로 넣어놨음
+storage 라이브러리 https://github.com/googleapis/python-storage
+
+torch 
+h5py or memorymap or Apache Arrow table
+concatdataset
+
+Apache Arrow table(https://huggingface.co/docs/datasets/_modules/nlp/arrow_dataset.html)
+				  (https://huggingface.co/docs/datasets/_modules/datasets/arrow_dataset.html)
+h5py (https://github.com/NVIDIA/DeepLearningExamples/blob/157a3acaa98f47dfb5ab1fbf7c79339bcbccc1bb/PyTorch/LanguageModeling/BERT/run_pretraining.py)
+
+
+
+bartbooks-out.txt은 노이즈 있음 
+'페이지이동(PG) 이전(B) 다음(엔터) 연속(NS) 기타(Z) 선택 >\n',
+
+
+
+
+ssh -i ~/.ssh/tpu_bart jisu@34.141.187.153 
+ssh -i ~/.ssh/tpu_bart jisu@34.147.1.208 
+ssh -i ~/.ssh/tpu_bart jisu@34.90.226.148
+
+
+
+
+scp -i ~/.ssh/tpu_bart -r /8T/bart_corpus jisu@34.147.1.208:~
+
+
+gcloud compute scp /8T/bart_corpus jisu@34.147.1.208:"/home"
+
+
+
+
+# 도커이미지를 통해 인스턴스 생성 
+gcloud compute instances create bart-node6 \
+--zone=europe-west4-a  \
+--machine-type=e2-highmem-16  \
+--image-family=torch-xla \
+--image-project=ml-images  \
+--boot-disk-size=200GB \
+--scopes=https://www.googleapis.com/auth/cloud-platform
+
+# TPU 노드 생성 - 202110. 현재 pytorch1.6 부터 1.9까지  (tpu-env, tpu-node2, tpu-node5, tpu-node6, tpu-test)
+gcloud compute tpus create tpu-node2 \
+--zone=europe-west4-a \
+--network=default \
+--version=pytorch-1.9 \
+--accelerator-type=v3-8
+
+
+
+# instance 연결
+gcloud compute ssh bart-env --zone=europe-west4-a
+
+# tpu 연결
+gcloud compute tpus describe tpu-env --zone=europe-west4-a
+gcloud compute tpus describe tpu-node2 --zone=europe-west4-a
+gcloud compute tpus describe tpu-node5 --zone=europe-west4-a
+gcloud compute tpus describe tpu-node6 --zone=europe-west4-a
+gcloud compute tpus describe tpu-test --zone=europe-west4-a
+
+
+# conda 및 커널 환경설정 (tpu-env, tpu-node2, tpu-node5, , tpu-test) #test for lightning
+conda activate torch-xla-1.9
+export TPU_IP_ADDRESS=10.127.252.58
+export XRT_TPU_CONFIG="tpu_worker;0;$TPU_IP_ADDRESS:8470"
+export TPU_NAME=tpu-node
+
+
+	
+export XLA_USE_BF16=1	
+nohup python -u tpu_main.py > bart_train.log &
+nohup python -u run_finetuning.py > train.log &
+	
+(torch-xla-1.7) jisu@bart-env:~$ jupyter notebook --ip=0.0.0.0 --NotebookApp.token=''
+5.43s / it
+
+## 모델 저장
+https://github.com/trisongz/hfsync/blob/4720fcee06582261244f64783007a3d018ccb66e/hfsync/__init__.py#L53
+
+## 모델 drop out 없이 시작
+node1-675.ckpt
+node1-753.ckpt
+
+
+ 
+ 
+
+## 이슈 2개 lr * xrt_world_size 이 맞는 것인지?
+https://issueexplorer.com/issue/pytorch/xla/3079
+https://arxiv.org/pdf/1706.02677.pdf
+https://forums.pytorchlightning.ai/t/effective-learning-rate-and-batch-size-with-lightning-in-ddp/101/19
+
+accumulation에 대한 이슈 (not save momory)
+https://github.com/pytorch/xla/issues/1367
+
+
+## 몇가지 logging들
+xm.master_print(met.metrics_report())
+def log(self, message):
+	if self.config.verbose:
+		xm.master_print(message)
+	with open(self.log_path, 'a+') as logger:
+		xm.master_print(f'{message}', logger)
+			
+## RateTracker (log)
+https://github.com/pytorch/xla/blob/master/test/test_train_mp_imagenet.py			
+
+
+
+
+357316216392-compute@developer.gserviceaccount.com
+
+# 프로파일링
+export PROJECT_ID=tbai-202110
+export ZONE=europe-west4-f
+export BUCKET_NAME=hanbart_bucket
+
+gcloud --project=$PROJECT_ID compute project-info add-metadata \
+--metadata BUCKET_NAME=$BUCKET_NAME
+
+gsutil mb -p ${PROJECT_ID} -c standard -l ${ZONE} gs://${BUCKET_NAME}
+
+
+gcloud beta services identity create --service tpu.googleapis.com --project $PROJECT_ID
+
+export SERVICE_ACCOUNT=service-357316216392@cloud-tpu.iam.gserviceaccount.com
+
+## """ 액세스 제어에서 세분화된 엑세스 제어로 변경 """
+gsutil acl ch -u $SERVICE_ACCOUNT:READER gs://${BUCKET_NAME}
+gsutil acl ch -u $SERVICE_ACCOUNT:WRITER gs://${BUCKET_NAME}
+
+gcloud compute ssh bart-env \
+   --project ${PROJECT_ID} \
+   --zone ${ZONE} \
+   --ssh-flag="-4 -L 9001:localhost:9001"
+   
+   
+pip install tf-nightly==2.6.0.dev20210601 tb-nightly==2.6.0a20210601 tbp-nightly==2.5.0a20210511
+
+tensorboard --logdir gs://${BUCKET_NAME} --port 9001
+
+
+
+## 데이터 scaling
+https://cloud.google.com/blog/topics/developers-practitioners/scaling-deep-learning-workloads-pytorch-xla-and-cloud-tpu-vm
+https://github.com/mlexample/torchxla_tpu
+
+## optimizer benchmark
+https://discuss.pytorch.org/t/importance-of-optimizers-when-continuing-training/64788
+https://amarsaini.github.io/Optimizer-Benchmarks/
+
+##
+다른 bart
+https://github.com/prajdabre/yanmtt 
+
+
+## 기타 
+https://github.com/NVIDIA/DeepLearningExamples/blob/bd257e1494adce448a685da2c898c0a05d40cde8/PyTorch/LanguageModeling/BERT/run_pretraining.py
+https://pytorch.org/xla/release/1.9/index.html    # official
+https://huggingface.co/transformers/v3.2.0/_modules/transformers/trainer.html
+https://github.com/huggingface/transformers/blob/master/src/transformers/trainer.py 
+https://github.com/pytorch/fairseq/blob/main/fairseq_cli/train.py
+https://pytorch.org/xla/master/_modules/torch_xla/distributed/parallel_loader.html
+https://github.com/huggingface/transformers/blob/d5b82bb70c2e8c4b184a6f2a7d1c91d7fd156956/src/transformers/data/data_collator.py#L188
+https://github.com/huggingface/transformers/blob/master/examples/pytorch/language-modeling/run_mlm.py
+https://kozodoi.me/python/deep%20learning/computer%20vision/tutorial/2020/10/30/pytorch-xla-tpu.html   #Training PyTorch Models on TPU
+https://www.reddit.com/r/MachineLearning/comments/kvs1ex/d_here_are_17_ways_of_making_pytorch_training/
+https://medium.com/@Thomwolf  #허깅페이스 medium
+##성능 비교
+https://junseong.oopy.io/a5e0a565-d09a-490a-87d7-6cf8cb8721d9  #gpu vs tpu
+https://github.com/haven-jeon/KoGPT2-subtasks #평가 모듈
+
+##indexed_dataset
+https://github.com/NVIDIA/Megatron-LM/blob/aed2f75e209e525c842aec7c044af7acae2a4614/megatron/data/indexed_dataset.py#L539
+--https://github.com/NVIDIA/Megatron-LM/blob/aed2f75e209e525c842aec7c044af7acae2a4614/tools/preprocess_data.py
+https://github.com/pytorch/fairseq/blob/fcca32258c8e8bcc9f9890bf4714fa2f96b6b3e1/fairseq/data/indexed_dataset.py
+
+
+
+#bucket
+gcloud config set project tbai-202110
+
+#bucket 쓰기
+gsutil mb -b on -l us-east1 gs://my-awesome-bucket/
+
+##bucket 복사 /HanBart_202110220849   /HanBart_base	/HanBart_FMbert_202110260830	/HanBart_FMbertN_202110260243    /HanBart_FMbertNN_202110220849
+gsutil -m cp -r /8T/bart_corpus gs://hanbart_bucket/bart_corpus_512_full
+gsutil cp -r sharding_corpus gs://hanbart_bucket/
+gsutil cp -r ./saved_checkpoint_* gs://hanbart_bucket/HanBart_base/
+
+gsutil cp -r saved_checkpoint_350 gs://hanbart_bucket/model_checkpoint/HanBart_202110220849/
+
+##나에게로
+gsutil cp gs://hanbart_bucket/HanBart_202110220849/saved_checkpoint_300.ckpt  ./
+gsutil cp gs://hanbart_bucket/HanBart_FMbert_202110260830/saved_checkpoint_300.ckpt  ./
+gsutil cp gs://hanbart_bucket/HanBart_FMbertN_202110260243/saved_checkpoint_100.ckpt  ./
+gsutil cp gs://hanbart_bucket/HanBart_base/saved_checkpoint_250.ckpt  ./
+
+
+HanBart_FMbertN_202110260243
+
+gsutil cp -r gs://hanbart_bucket/model_checkpoint/HanBart_202110220849/saved_checkpoint_500  ./
+
+gsutil -m cp -r gs://hanbart_bucket/sharding_corpus/*  ./
+
+gsutil -m cp -r ./saved_checkpoint_* gs://hanbart_bucket/model_checkpoint/HanBart_FMbertN_202110260243/
+
+gsutil -m cp -r gs://hanbart_bucket/h5py_dataset  ./
+
+gsutil cp gs://hanbart_bucket/bart_corpus_512/bart100dic_doosan.step2.txt ./
+
+#from other model
+https://discuss.pytorch.org/t/how-to-load-part-of-pre-trained-model/1113/24
+
+
+#scp 
+gcloud compute scp --recurse bart-env2:~/bart/model_checkpoint/saved_checkpoint_26.ckpt ./
+gcloud compute scp --recurse bart-test2:~/data ./
+
+
+
+26일 오후- Token masking -> Word masking으로 변경
+
+
+#nsmc
+git clone https://github.com/e9t/nsmc
+
+#tokenizer
+hanbertokenizer ddp 안됨
+
+#transformers hub
+
+#get
+
+
+#document 예제
+https://nvidia.github.io/MinkowskiEngine/index.html
+
+#convert2folder.py
+python convert2folder.py --model_name HanBart_base --cpkt_file saved_checkpoint_250.ckpt --save_folder ./HanBart_base/saved_checkpoint_250

@@ -1,0 +1,194 @@
+PreTrainedTokenizer(name_or_path='HanBert-54kN-torch', vocab_size=54000, model_max_len=1000000000000000019884624838656, is_fast=False, padding_side='right', special_tokens={'bos_token': '[CLS]', 'eos_token': '[SEP]', 'unk_token': '[UNK]', 'sep_token': '[SEP]', 'pad_token': '[PAD]', 'cls_token': '[CLS]', 'mask_token': '[MASK]'})
+​
+
+PreTrainedTokenizer(name_or_path='facebook/bart-base', vocab_size=50265, model_max_len=1024, is_fast=False, padding_side='right', special_tokens={'bos_token': AddedToken("<s>", rstrip=False, lstrip=False, single_word=False, normalized=True), 'eos_token': AddedToken("</s>", rstrip=False, lstrip=False, single_word=False, normalized=True), 'unk_token': AddedToken("<unk>", rstrip=False, lstrip=False, single_word=False, normalized=True), 'sep_token': AddedToken("</s>", rstrip=False, lstrip=False, single_word=False, normalized=True), 'pad_token': AddedToken("<pad>", rstrip=False, lstrip=False, single_word=False, normalized=True), 'cls_token': AddedToken("<s>", rstrip=False, lstrip=False, single_word=False, normalized=True), 'mask_token': AddedToken("<mask>", rstrip=False, lstrip=True, single_word=False, normalized=True)})
+
+PreTrainedTokenizer(name_or_path='facebook/bart-large', vocab_size=50265, model_max_len=1024, is_fast=False, padding_side='right', special_tokens={'bos_token': AddedToken("<s>", rstrip=False, lstrip=False, single_word=False, normalized=True), 'eos_token': AddedToken("</s>", rstrip=False, lstrip=False, single_word=False, normalized=True), 'unk_token': AddedToken("<unk>", rstrip=False, lstrip=False, single_word=False, normalized=True), 'sep_token': AddedToken("</s>", rstrip=False, lstrip=False, single_word=False, normalized=True), 'pad_token': AddedToken("<pad>", rstrip=False, lstrip=False, single_word=False, normalized=True), 'cls_token': AddedToken("<s>", rstrip=False, lstrip=False, single_word=False, normalized=True), 'mask_token': AddedToken("<mask>", rstrip=False, lstrip=True, single_word=False, normalized=True)})
+
+PreTrainedTokenizerFast(name_or_path='kobart', vocab_size=30000, model_max_len=1000000000000000019884624838656, is_fast=True, padding_side='right', special_tokens={'bos_token': '<s>', 'eos_token': '</s>', 'unk_token': '<unk>', 'pad_token': '<pad>', 'mask_token': '<mask>'})
+
+
+
+ ssh -i "tbai_2021.pem" ubuntu@ec2-13-125-250-191.ap-northeast-2.compute.amazonaws.com
+ scp -i "tbai_2021.pem" /8T/bart_corpus/bart_clinic-out.txt ssh -i "tbai_2021.pem" ubuntu@ec2-13-125-250-191.ap-northeast-2.compute.amazonaws.com:/home/ubuntu/bart/data
+
+
+https://github.com/huggingface/transformers/issues/5212
+
+
+nohup python -u main.py &>test.out < /dev/null &
+30685
+
+misc/kowiki_20200720_100d.pkl
+
+tfrecords.. (데이터 용량 문제)
+하지만 electra에서는 tfrecords파일을 만들긴 하지만, masking 하는 부분을 dataloader에 따로 넣어놨음
+
+
+torch 
+h5py or memorymap or Apache Arrow table
+concatdataset
+
+Apache Arrow table(https://huggingface.co/docs/datasets/_modules/nlp/arrow_dataset.html)
+				  (https://huggingface.co/docs/datasets/_modules/datasets/arrow_dataset.html)
+h5py (https://github.com/NVIDIA/DeepLearningExamples/blob/157a3acaa98f47dfb5ab1fbf7c79339bcbccc1bb/PyTorch/LanguageModeling/BERT/run_pretraining.py)
+
+
+
+bartbooks-out.txt은 노이즈 있음 
+'페이지이동(PG) 이전(B) 다음(엔터) 연속(NS) 기타(Z) 선택 >\n',
+
+
+
+
+ssh -i ~/.ssh/tpu_bart jisu@34.147.116.213
+
+us-central1-f
+europe-west4-a
+
+# 도커이미지를 통해 인스턴스 생성
+gcloud compute instances create bart-env \
+--zone=europe-west4-a  \
+--machine-type=n1-standard-16  \
+--image-family=torch-xla \
+--image-project=ml-images  \
+--boot-disk-size=200GB \
+--scopes=https://www.googleapis.com/auth/cloud-platform
+
+# TPU 노드 생성 - 202110. 현재 pytorch1.7 부터 1.9까지 
+gcloud compute tpus create tpu-env \
+--zone=europe-west4-a \
+--network=default \
+--version=pytorch-1.9 \
+--accelerator-type=v3-8
+
+
+
+# instance 연결
+gcloud compute ssh bart-env --zone=europe-west4-a
+
+# tpu 연결
+gcloud compute tpus describe tpu-env --zone=europe-west4-a
+
+# conda 및 커널 환경설정
+conda activate torch-xla-1.7
+export TPU_IP_ADDRESS=10.8.0.74
+export XRT_TPU_CONFIG="tpu_worker;0;$TPU_IP_ADDRESS:8470"
+export TPU_NAME=tpu-env
+
+
+
+python /usr/share/torch-xla-1.7/tpu-examples/deps/fairseq/train.py $DATA_DIR \
+    --task masked_lm \
+    --criterion masked_lm \
+    --arch roberta_base \
+    --sample-break-mode complete \
+    --tokens-per-sample $TOKENS_PER_SAMPLE \
+    --optimizer adam \
+    --adam-betas '(0.9,0.98)' \
+    --adam-eps 1e-6 \
+    --clip-norm 0.0 \
+    --lr-scheduler polynomial_decay \
+    --lr $PEAK_LR \
+    --warmup-updates $WARMUP_UPDATES \
+    --total-num-update $TOTAL_UPDATES \
+    --dropout 0.1 \
+    --attention-dropout 0.1 \
+    --weight-decay 0.01 \
+    --update-freq $UPDATE_FREQ \
+    --max-update $TOTAL_UPDATES \
+    --log-format simple \
+    --valid-subset=valid \
+    --train-subset=train \
+    --num_cores=8 \
+    --metrics_debug \
+    --input_shapes 16x512 18x480 21x384 \
+    --save-dir=${HOME}/checkpoints \
+    --log_steps=30 \
+    --max-epoch=1 \
+    --skip-invalid-size-inputs-valid-test
+	
+	
+nohup python -u tpu_main.py > bart_train.log &
+	
+	
+(torch-xla-1.7) jisu@bart-env:~$ jupyter notebook --ip=0.0.0.0 --NotebookApp.token=''
+5.43s / it
+
+## 모델 저장
+https://github.com/trisongz/hfsync/blob/4720fcee06582261244f64783007a3d018ccb66e/hfsync/__init__.py#L53
+
+
+iter_bar = tqdm(
+para_loader.per_device_loader(device),
+total = len(para_loader.per_device_loader(device)),
+desc = ' lter (Loss:X.XXX LR:X.XXX)'
+)
+
+ 
+ 
+ 
+
+## 이슈 2개 lr * xrt_world_size 이 맞는 것인지?
+https://issueexplorer.com/issue/pytorch/xla/3079
+https://arxiv.org/pdf/1706.02677.pdf
+https://forums.pytorchlightning.ai/t/effective-learning-rate-and-batch-size-with-lightning-in-ddp/101/19
+
+accumulation에 대한 이슈 (not save momory)
+https://github.com/pytorch/xla/issues/1367
+
+
+## 몇가지 logging들
+xm.master_print(met.metrics_report())
+def log(self, message):
+	if self.config.verbose:
+		xm.master_print(message)
+	with open(self.log_path, 'a+') as logger:
+		xm.master_print(f'{message}', logger)
+			
+## RateTracker (log)
+https://github.com/pytorch/xla/blob/master/test/test_train_mp_imagenet.py			
+
+
+## 기타 
+https://huggingface.co/transformers/v3.2.0/_modules/transformers/trainer.html
+https://github.com/huggingface/transformers/blob/master/src/transformers/trainer.py 
+https://github.com/pytorch/fairseq/blob/main/fairseq_cli/train.py
+https://pytorch.org/xla/master/_modules/torch_xla/distributed/parallel_loader.html
+
+357316216392-compute@developer.gserviceaccount.com
+
+# 프로파일링
+export PROJECT_ID=tbai-202110
+export ZONE=europe-west4-f
+export BUCKET_NAME=hanbart_bucket
+
+gcloud --project=$PROJECT_ID compute project-info add-metadata \
+--metadata BUCKET_NAME=$BUCKET_NAME
+
+gsutil mb -p ${PROJECT_ID} -c standard -l ${ZONE} gs://${BUCKET_NAME}
+
+
+gcloud beta services identity create --service tpu.googleapis.com --project $PROJECT_ID
+
+export SERVICE_ACCOUNT=service-357316216392@cloud-tpu.iam.gserviceaccount.com
+
+## """ 액세스 제어에서 세분화된 엑세스 제어로 변경 """
+gsutil acl ch -u $SERVICE_ACCOUNT:READER gs://${BUCKET_NAME}
+gsutil acl ch -u $SERVICE_ACCOUNT:WRITER gs://${BUCKET_NAME}
+
+gcloud compute ssh bart-env \
+   --project ${PROJECT_ID} \
+   --zone ${ZONE} \
+   --ssh-flag="-4 -L 9001:localhost:9001"
+   
+   
+pip install tf-nightly==2.6.0.dev20210601 tb-nightly==2.6.0a20210601 tbp-nightly==2.5.0a20210511
+
+tensorboard --logdir gs://${BUCKET_NAME} --port 9001
+
+
+
+데이터 scaling
+https://cloud.google.com/blog/topics/developers-practitioners/scaling-deep-learning-workloads-pytorch-xla-and-cloud-tpu-vm
+https://github.com/mlexample/torchxla_tpu

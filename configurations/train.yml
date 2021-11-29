@@ -1,0 +1,25 @@
+tbai_required:
+  model_id: "HanBart"
+setup:
+  model_class: BartForConditionalGeneration
+  tokenizer_class: BartTokenizer
+  optimizer_class: Adafactor
+  config_class: HanBart-54kN
+  tokenizer: HanBart-54kN
+  checkpoint: HanBart_202110220849
+  model: 
+  data_dir: /home/jisu/h5py_dataset
+  device: 
+  bucket_name: hanbart_bucket
+  tpu: True
+  xla_parallel: True
+
+
+hyperparameters:
+  learning_rate: 5e-5
+  epochs: 5000000
+  train_batch_size: 16
+  eval_batch_size: 16
+  gradient_accumulation_steps: 4
+  log_every: 20
+  
